@@ -8,8 +8,10 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from tab4 import tab4_func as t4
 from tab3 import tab3_func as t3
 from tab1 import tab1_func as t1
+from tab8 import tab8_func as t8
 from datetime import datetime
 import tempfile
+import csv
 
 def replace_special_periods(text):
     text = re.sub(r'\bDr\.', 'Dr<PERIOD>', text)
@@ -168,23 +170,40 @@ def merge_segments(segments):
 
     return merged_segments
 
-def process_vtt(lines):
+
+def convert_seconds_to_time_srt(seconds):
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = seconds % 60
+    return f"{h:02}:{m:02}:{s:06.3f}".replace('.', ',')
+
+def process_vtt(lines,replace_words=True):
     segments = []
     start_time = None
     end_time = None
     text = ""
     header = lines[0]
 
-    # タイムスタンプの整形を適用
-    lines = t4.unify_timestamps_forlist(lines, 'vtt')
-
     for line in lines[1:]:
         if re.match(r'^\d+$', line.strip()):
-            if text:
-                text = replace_special_periods(text)
+            if text:               
+
+                
+                with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+                    reader = csv.reader(dot_csvfile)
+                    next(reader)
+                    dot_replacements = [(row[0],row[1]) for row in reader]
+                
+                
+                for dot_original, dot_replacement in dot_replacements:
+                    r_dot_original=re.escape(dot_original)
+                    dot_new_original = rf"\b{r_dot_original}"
+                    text = re.sub(dot_new_original, dot_replacement, text)
+
                 if start_time is not None and end_time is not None:
                     segments.extend(split_segment(text.strip(), start_time, end_time))
             text = ""
+            
         elif '-->' in line:
             times = line.strip().split(' --> ')
             start_time = convert_time_to_seconds(times[0])
@@ -193,38 +212,76 @@ def process_vtt(lines):
             text += line.strip() + " "
 
     if text:
-        text = replace_special_periods(text)
+        #print(st.session_state.select_dot_result)
+            
+        with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+            reader = csv.reader(dot_csvfile)
+            next(reader)
+            dot_replacements = [(row[0],row[1]) for row in reader]
+        
+        
+        for dot_original, dot_replacement in dot_replacements:
+            r_dot_original=re.escape(dot_original)
+            dot_new_original = rf"\b{r_dot_original}"
+            text = re.sub(dot_new_original, dot_replacement, text)
+
+        #text = replace_special_periods(text)
         if start_time is not None and end_time is not None:
             segments.extend(split_segment(text.strip(), start_time, end_time))
 
     merged_segments = merge_segments(segments)
 
+
+    if replace_words==True: 
+
+        with open("replacements.csv", newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # ヘッダーをスキップ
+            replacements = [(row[0], row[1]) for row in reader]
+
+
     output = [header]
-    segment_number = 1
-    for text, start, end in merged_segments:
+    NR_content=[]
+    segment_number = 0
+    for text, start, end in merged_segments:        
         text = restore_special_periods(text)
-        output.append(f"{segment_number}")
-        output.append(convert_seconds_to_time(start, 'vtt') + ' --> ' + convert_seconds_to_time(end, 'vtt'))
+        if replace_words==True:
+            for original, replacement in replacements:
+                original=re.escape(original)
+                new_original = rf"\b{original}\b"
+                text = re.sub(new_original, replacement, text)
+        output.append(f"{segment_number + 1}")
+        output.append(f"{convert_seconds_to_time(start, 'vtt')} --> {convert_seconds_to_time(end, 'vtt')}")
         output.append(text)
+        NR_content.append(text.strip())
         segment_number += 1
         output.append("")  # セグメント間の改行を保持
 
-    return '\n'.join(output)
+    return '\n'.join(output) ,' '.join(NR_content)
 
-'''def process_srt(lines):
+def process_srt(lines,replace_word=True):
     segments = []
     start_time = None
     end_time = None
     text = ""
     segment_index = 0
 
-    # タイムスタンプの整形を適用
-    lines = t4.unify_timestamps_forlist(lines, 'srt')
-
     for line in lines:
         if re.match(r'^\d+$', line.strip()):
             if text:
-                text = replace_special_periods(text)
+                # text = replace_special_periods(text)
+
+                with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+                    reader = csv.reader(dot_csvfile)
+                    next(reader)
+                    dot_replacements = [(row[0],row[1]) for row in reader]
+                
+                
+                for dot_original, dot_replacement in dot_replacements:
+                    r_dot_original=re.escape(dot_original)
+                    dot_new_original = rf"\b{r_dot_original}"
+                    text = re.sub(dot_new_original, dot_replacement, text)
+
                 segments.extend(split_segment(text.strip(), start_time, end_time))
             segment_index = int(line.strip())
             text = ""
@@ -236,65 +293,48 @@ def process_vtt(lines):
             text += line.strip() + " "
 
     if text:
-        text = replace_special_periods(text)
+        #text = replace_special_periods(text)
+        
+  
+        with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+            reader = csv.reader(dot_csvfile)
+            next(reader)
+            dot_replacements = [(row[0],row[1]) for row in reader]
+        
+        
+        for dot_original, dot_replacement in dot_replacements:
+            r_dot_original=re.escape(dot_original)
+            dot_new_original = rf"\b{r_dot_original}"
+            text = re.sub(dot_new_original, dot_replacement, text)
+
         segments.extend(split_segment(text.strip(), start_time, end_time))
 
     merged_segments = merge_segments(segments)
 
+    # replacements.csv を読み込む
+    
+    if replace_word==True:
+        
+        with open("replacements.csv", newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)  # ヘッダーをスキップ
+            replacements = [(row[0], row[1]) for row in reader]
+
     output = []
     segment_number = 0
+    NR_content=[]
     for text, start, end in merged_segments:
         text = restore_special_periods(text)
+        if replace_word==True:
+            for original, replacement in replacements:
+                original=re.escape(original)
+                new_original = rf"\b{original}\b"
+                text = re.sub(new_original, replacement, text)
         output.append(f"{segment_number + 1}\n{convert_seconds_to_time(start,'srt').replace('.', ',')} --> {convert_seconds_to_time(end,'srt').replace('.', ',')}\n{text}\n")
+        NR_content.append(text.strip())
         segment_number += 1
 
-    return '\n'.join(output)'''
-def convert_seconds_to_time_srt(seconds):
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = seconds % 60
-    return f"{h:02}:{m:02}:{s:06.3f}".replace('.', ',')
-def process_srt(lines):
-    segments = []
-    start_time = None
-    end_time = None
-    text = ""
-    segment_index = 0
-
-    for line in lines:
-        if re.match(r'^\d+$', line.strip()):
-            if text:
-                #print(f"Text before replacing periods: {text}")  # デバッグ出力
-                text = replace_special_periods(text)
-                #print(f"Text after replacing periods: {text}")  # デバッグ出力
-                segments.extend(split_segment(text.strip(), start_time, end_time))
-            segment_index = int(line.strip())
-            text = ""
-        elif '-->' in line:
-            times = line.strip().split(' --> ')
-            start_time = convert_time_to_seconds(times[0].replace(',', '.'))
-            end_time = convert_time_to_seconds(times[1].replace(',', '.'))
-        else:
-            text += line.strip() + " "
-
-    if text:
-        #print(f"Text before replacing periods: {text}")  # デバッグ出力
-        text = replace_special_periods(text)
-        #print(f"Text after replacing periods: {text}")  # デバッグ出力
-        segments.extend(split_segment(text.strip(), start_time, end_time))
-
-    merged_segments = merge_segments(segments)
-
-    output = []
-    segment_number = 0
-    for text, start, end in merged_segments:
-        #print(f"Text before restoring periods: {text}")  # デバッグ出力
-        text = restore_special_periods(text)
-        #print(f"Text after restoring periods: {text}")  # デバッグ出力
-        output.append(f"{segment_number + 1}\n{convert_seconds_to_time_srt(start)} --> {convert_seconds_to_time_srt(end)}\n{text}\n")
-        segment_number += 1
-
-    return '\n'.join(output)
+    return '\n'.join(output), ' '.join(NR_content)
 
 
 def convert_time_to_seconds(time_str):
@@ -336,11 +376,14 @@ def process_file(input_file):
     _, file_extension = os.path.splitext(input_file)
 
     if file_extension.lower() == '.vtt':
-        output = process_vtt(lines)
+        output,NR_content = process_vtt(lines)
         output_file = os.path.splitext(input_file)[0] + '_ed.vtt'
+        NR_content_file=os.path.splitext(input_file)[0]+'_ed_NR.txt'
     elif file_extension.lower() == '.srt':
-        output = process_srt(lines)
+        output,NR_content = process_srt(lines)
         output_file = os.path.splitext(input_file)[0] + '_ed.srt'
+        NR_content_file=os.path.splitext(input_file)[0]+'_ed_NR.txt'
+
     else:
         raise ValueError('Unsupported file format')
     
@@ -351,7 +394,9 @@ def process_file(input_file):
     temp_output_file=os.path.join(temp_dir,output_file)
     with open(temp_output_file, 'w',encoding='utf-8') as file:
         file.write(output)
-
+    temp_NR_file=os.path.join(temp_dir,NR_content_file)
+    with open(temp_NR_file, 'w',encoding='utf-8') as file:
+        file.write(NR_content)
     # Add the output to a .docx file
     '''doc = Document()
     doc.add_paragraph(output)
@@ -380,7 +425,7 @@ def process_file(input_file):
             {t7_df}
         </div>
     """     
-    return output_html, [temp_output_file,t7_excel_file],temp_output_file,t7_df
+    return output_html, [temp_output_file,t7_excel_file,temp_NR_file],temp_output_file,t7_df
 
 ##翻訳後の関数##
 def correct_srt_format_from_text(text):
@@ -584,7 +629,10 @@ def vtt_translate(input_file, translated_content,output_file):
 
     # excel出力
     output_excel_file = create_excel(output_file, temp_output_ja_file_path)
-    return [output_ja_file_path,output_excel_file]
+    SP_files=t8.process_files([output_ja_file_path])
+    SP_file=SP_files[0]
+    
+    return [output_ja_file_path,SP_file,output_excel_file]
 
 ##追加ぶん
 def webvtt_remover(sentence): #tab3用。
