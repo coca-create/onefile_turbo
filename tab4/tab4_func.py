@@ -187,7 +187,7 @@ def display_file_content(file):
         if file.endswith('.srt'):
             excel_path,NR_path,t4_df = t3.create_excel_from_srt(english_path=file,tail="",HealingALS=True)
         elif file.endswith('.vtt'):
-            excel_path,NR,path,t4_df = t3.create_excel_from_srt(english_path=file,tail="",HealingALS=True)
+            excel_path,NR_path,t4_df = t3.create_excel_from_srt(english_path=file,tail="",HealingALS=True)
 
         t4_df=t1.dataframe_to_html_table(t4_df)
         t4_df=f"""
