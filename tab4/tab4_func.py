@@ -8,6 +8,7 @@ import tempfile
 import pandas as pd
 from tab1 import tab1_func as t1
 from tab7 import tab7_func as t7
+from tab8 import tab8_func as t8
 from datetime import datetime
 import csv
 
@@ -314,8 +315,13 @@ def save_translated_content(file, translated_text):
        
         with open(otfile_path, 'w', encoding='utf-8') as file:
             file.write(corrected_content + '\n')
+        
+        SP_files=t8.process_files([otfile_path])
+        SP_file=SP_files[0]
+    
+       
               
-    return otfile_path
+    return [otfile_path,SP_file]
 
 def translate(file, translated_text):
     return save_translated_content(file, translated_text)
