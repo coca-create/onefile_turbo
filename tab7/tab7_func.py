@@ -379,10 +379,12 @@ def process_file(input_file):
         output,NR_content = process_vtt(lines)
         output_file = os.path.splitext(input_file)[0] + '_ed.vtt'
         NR_content_file=os.path.splitext(input_file)[0]+'_ed_NR.txt'
+        R_content_file=os.path.splitext(input_file)[0]+'_ed_R.txt'
     elif file_extension.lower() == '.srt':
         output,NR_content = process_srt(lines)
         output_file = os.path.splitext(input_file)[0] + '_ed.srt'
         NR_content_file=os.path.splitext(input_file)[0]+'_ed_NR.txt'
+        R_content_file=os.path.splitext(input_file)[0]+'_ed_R.txt'
 
     else:
         raise ValueError('Unsupported file format')
@@ -395,8 +397,13 @@ def process_file(input_file):
     with open(temp_output_file, 'w',encoding='utf-8') as file:
         file.write(output)
     temp_NR_file=os.path.join(temp_dir,NR_content_file)
+    temp_R_file=os.path.join(temp_dir,R_content_file)
     with open(temp_NR_file, 'w',encoding='utf-8') as file:
         file.write(NR_content)
+    
+    R_content=NR_content.replace(". ",".\n").replace("? ","?\n")
+    with open(temp_R_file,"w",encoding='utf-8') as f:
+        f.write(R_content)
     # Add the output to a .docx file
     '''doc = Document()
     doc.add_paragraph(output)
@@ -425,7 +432,7 @@ def process_file(input_file):
             {t7_df}
         </div>
     """     
-    return output_html, [temp_output_file,t7_excel_file,temp_NR_file],temp_output_file,t7_df
+    return output_html, [temp_output_file,t7_excel_file,temp_NR_file,temp_R_file],temp_output_file,t7_df
 
 ##翻訳後の関数##
 def correct_srt_format_from_text(text):
