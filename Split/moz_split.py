@@ -6,7 +6,7 @@ from datetime import datetime
 import csv
 
 # SpaCyの大規模モデルをロード
-nlp = spacy.load("en_core_web_lg")
+nlp = spacy.load("en_core_web_sm")
 
 # 固有名詞として誤認識されやすい単語をリストに追加
 proper_nouns = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
@@ -15,7 +15,7 @@ proper_nouns = {"monday", "tuesday", "wednesday", "thursday", "friday", "saturda
 prefixes = ["pre", "part", "intra", "inter", "sub", "life","self", "trans", "hyper", "hypo", "post", "anti", "auto", "bi", "co", "de", "dis", "en", "extra", "micro", "mid", "mono", "non", "over", "peri", "pro", "re", "semi", "super", "ultra", "un", "under"]
 
 def process_text(text):
-
+    
     # 文を解析
     doc = nlp(text)
     result = []
@@ -110,7 +110,7 @@ def process_srt_file(file_path,output_name):
     #progress_bar = st.progress(0)  # Streamlitの進捗バーを初期化
 
     processed_lines = []
-    
+    print("real_spacy_started")
     for i, line in enumerate(lines):
         # SRTファイルのタイムコード部分はそのまま維持
         if re.match(r'\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}', line):
@@ -120,17 +120,24 @@ def process_srt_file(file_path,output_name):
             processed_lines.append(line)
         # それ以外はテキストとして処理
         else:
-            processed_text = process_text(line.strip())
+            try:
+                processed_text = process_text(line.strip())
             
-            for original, replacement in replacements:
-                original=re.escape(original)
-                new_original = rf"\b{original}\b"
-                processed_text = re.sub(new_original, replacement, processed_text)
-            processed_lines.append(processed_text + "\n")
-
+                for original, replacement in replacements:
+                    original=re.escape(original)
+                    new_original = rf"\b{original}\b"
+                    processed_text = re.sub(new_original, replacement, processed_text)
+                processed_lines.append(processed_text + "\n")
+                
+            except Exception as e:
+                # エラーをログに記録
+                print(f"Error processing line {i}: {line.strip()} - {e}")
+                # エラーが発生した行をそのまま追加（必要に応じて変更）
+                processed_lines.append(line)
 
 
     # 結果を新しいSRTファイルに保存
+    print("spacy_success")
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     temp_dir = os.path.join(tempfile.gettempdir(), f"tempdir_{timestamp}")
     os.makedirs(temp_dir, exist_ok=True)
@@ -167,11 +174,29 @@ def process_text_file(input_file, output_name,replace_word=True):
     os.makedirs(temp_dir, exist_ok=True)
 
     output_file = os.path.join(temp_dir,output_name)
+    output_file_R=output_file.replace("NR","R")
+    
+    R_text=processed_text
+    with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+        reader = csv.reader(dot_csvfile)
+        next(reader)
+        dot_replacements = [(row[0],row[1]) for row in reader]
+    
+    for dot_original, dot_replacement in dot_replacements:
+        r_dot_original=re.escape(dot_original)
+        dot_new_original = rf"\b{r_dot_original}"
+        R_text = re.sub(dot_new_original, dot_replacement, R_text)  
+    
+    R_text=R_text.replace(". ",".\n").replace("? ","?\n").replace("[dot]",".")
+
+
     # 結果を出力ファイルに保存
     with open(output_file, "w", encoding="utf-8") as file:
         file.write(processed_text)
-    
-    return output_file
+
+    with open(output_file_R,"w",encoding="utf-8") as f:
+        f.write(R_text)
+    return output_file,output_file_R
 
 
 
