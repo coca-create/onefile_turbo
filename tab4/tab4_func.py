@@ -189,13 +189,33 @@ def display_file_content(file):
         elif file.endswith('.vtt'):
             excel_path,NR_path,t4_df = t3.create_excel_from_srt(english_path=file,tail="",HealingALS=True)
 
+        with open(NR_path,"r",encoding='utf-8') as f:
+            R_content=f.read()
+        
+        with open("dot_manager.csv", newline='',encoding='utf-8') as dot_csvfile:
+            reader = csv.reader(dot_csvfile)
+            next(reader)
+            dot_replacements = [(row[0],row[1]) for row in reader]
+        
+        
+        for dot_original, dot_replacement in dot_replacements:
+            r_dot_original=re.escape(dot_original)
+            dot_new_original = rf"\b{r_dot_original}"
+            R_content = re.sub(dot_new_original, dot_replacement, R_content)
+
+        R_content=R_content.replace(". ",".\n").replace("? ","?\n").replace("[dot]",".")
+        R_path=NR_path.replace("_NR","_R")
+        with open(R_path,"w",encoding='utf-8') as f:
+            f.write(R_content)
+              
+
         t4_df=t1.dataframe_to_html_table(t4_df)
         t4_df=f"""
             <div class="my-table-container">
                 {t4_df}
             </div>
         """            
-    return html_content, [excel_path,NR_path],t4_df
+    return html_content, [excel_path,NR_path,R_path],t4_df
 
 def save_translated_content(file, translated_text):
     if file==None:
