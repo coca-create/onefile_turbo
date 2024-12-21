@@ -8,6 +8,7 @@ from datetime import datetime
 import tempfile
 import spacy
 import zipfile
+from transformers import AutoTokenizer, AutoModelForTokenClassification
 
 from Split import moz_split as sp 
 import csv
@@ -351,6 +352,7 @@ def write_txt_file(segments, output_file):
         full_text = apply_custom_replacements(full_text)
         f.write(full_text)
 
+
 def tab9_main(json_file, input_srt_file):
     # プログレスバーを表示
     print(json_file)
@@ -363,29 +365,32 @@ def tab9_main(json_file, input_srt_file):
 
     temp_srt_file = os.path.join(temp_dir,"temp_punctuated.srt")
     process_srt_file(input_srt_file, temp_srt_file)
-    
+    print("punctuations are added")
     # JSONファイルと前処理したSRTファイルを読み込む
     json_data = load_json(json_file)
     srt_subs = load_srt(temp_srt_file)
     
     # 新しいセグメントを生成
     new_segments = process_segments(srt_subs, json_data)
-    
+    print("new segments are processed(splitted")
     # 元のファイル名に_revを追加したファイル名を生成
 
 
     base_name = os.path.splitext(os.path.basename(input_srt_file))[0]
     temp_srt_output_file = os.path.join(temp_dir, f"deepmulti_{base_name}_rv.srt")
     temp_txt_output_file = os.path.join(temp_dir, f"deepmulti_{base_name}_rv_NR.txt")
+    
 
     write_srt_file(new_segments, temp_srt_output_file)
     write_txt_file(new_segments, temp_txt_output_file)
     output_name1 =f'{base_name}_rv.srt'
+    print("start spacy")
     srt_output_file = sp.process_srt_file(temp_srt_output_file,output_name1)
     output_name2=f'{base_name}_rv_NR.txt'
-    txt_output_file = sp.process_text_file(temp_txt_output_file,output_name2)
+    txt_output_file,txtR_output_file = sp.process_text_file(temp_txt_output_file,output_name2)
+   
 
-    return srt_output_file, txt_output_file
+    return srt_output_file, txt_output_file,txtR_output_file
 
 
 
@@ -414,6 +419,7 @@ def repair(json_files, srt_files):
 
     srt_output_files = []
     txt_output_files = []
+    txtR_output_files= []
 
     # プログレスバーの固定コンテナを作成
   
@@ -426,12 +432,13 @@ def repair(json_files, srt_files):
         
 
 
-        srt_output_file, txt_output_file = tab9_main(
+        srt_output_file, txt_output_file,txtR_output_file = tab9_main(
             json_file, 
             srt_file,  
         )
         srt_output_files.append(srt_output_file)
         txt_output_files.append(txt_output_file)
+        txtR_output_files.append(txtR_output_file)
 
 
     if len(srt_output_files) > 1 :
@@ -441,22 +448,27 @@ def repair(json_files, srt_files):
         os.makedirs(temp_dir, exist_ok=True)
 
         reversal_srt_zip = os.path.join(temp_dir, "reversal_srt_files.zip")
-        reversal_txt_zip = os.path.join(temp_dir, "reversal_txt_files.zip")
+        reversal_txtNR_zip = os.path.join(temp_dir, "reversal_NR_files.zip")
+        reversal_txtR_zip = os.path.join(temp_dir, "reversal_R_files.zip")
+
         with zipfile.ZipFile(reversal_srt_zip, 'w') as srt_zip:
             for file in srt_output_files:
                 srt_zip.write(file, os.path.basename(file))
-        with zipfile.ZipFile(reversal_txt_zip, 'w') as txt_zip:
+        with zipfile.ZipFile(reversal_txtNR_zip, 'w') as txt_zip:
             for file in txt_output_files:
                 txt_zip.write(file, os.path.basename(file))
+        with zipfile.ZipFile(reversal_txtR_zip, 'w') as txt_zip:
+            for file in txtR_output_files:
+                txt_zip.write(file, os.path.basename(file))
 
-        return [reversal_srt_zip, reversal_txt_zip]
+        return [reversal_srt_zip, reversal_txtNR_zip,reversal_txtR_zip]
     elif len(srt_output_files)==0:
  
-        return [None,None]
+        return [None,None,None]
     # 単数ファイルの場合
     else:
         print(srt_output_files[0])
         print(txt_output_files[0])
-        return [srt_output_files[0], txt_output_files[0]]
+        return [srt_output_files[0], txt_output_files[0],txtR_output_files[0]]
 
 
