@@ -17,7 +17,7 @@ def gr_components():
         gr.Markdown(
             """
             <h1 style="color:'darkblue'; font-family :'Arial', sans-serif;font-size:36px;"> PeriOz　- Web & Trial - </h1>
-            <p style="color:gray; letter-spacing:0.05em;">OpenAIのfaster-whisperを使っています。字幕の区切りを必ずピリオドにできるのがこのアプリの特徴です。それにより翻訳精度が保たれます。<br>一方、この方式を使うデメリットは一文が長いこと。日本語字幕作成後は「Subtitle Edit」等の自動分割を利用すると読みやすくなります。</p>
+            <p style="color:gray; letter-spacing:0.05em;">OpenAIのfaster-whisperを使っています。字幕の区切りを必ずピリオドにできるのがこのアプリの特徴です。それにより翻訳精度が保たれます。</p>
             """)
         
         ### Gradio-Tab1 ###
