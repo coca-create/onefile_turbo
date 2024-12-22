@@ -7,7 +7,6 @@ from tab5 import tab5_func as t5
 #from tab6 import tab6_func_stock as t6
 from tab7 import tab7_func as t7
 from tab8 import tab8_func as t8
-from Jsons import jsonplussrt as rev_j
 import pandas as pd
 
 
