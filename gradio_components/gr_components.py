@@ -31,7 +31,7 @@ def gr_components():
                     with gr.Row():
                         exec_btn = gr.Button("データファイルの作成", variant="primary")
                         t1_clear_Button=gr.Button(value='クリア')
-                    param2 = gr.Dropdown(["medium", "large", "large-v2", "large-v3", "large-v3-turbo"], value="large-v2", label="モデルを選ぶ")
+                    param2 = gr.Dropdown(["medium", "large-v1", "large-v2", "large-v3-turbo", "large-v3"], value="large-v2", label="モデルを選ぶ")
                     param3 = gr.Radio(["int8", "float16", "float32","int8_float16","int8_float32"], value="float32", label="演算方法を選ぶ")
                     with gr.Row():
                         param4 = gr.Radio(["英語"], value="英語", label="言語を選ぶ")
