@@ -137,17 +137,7 @@ def gr_components():
 
                     t4_dataframe=gr.HTML()
 
-        with gr.Tab("whisperファイルの復活"):
-            gr.Markdown('> whisperがピリオドを打たなくなったSRTファイルの内容にピリオドを追加して、ピリオド区切りのファイルを生成します。')            
-            with gr.Row(equal_height=True):
-                with gr.Column():
-                    jsonfile=gr.File(label="jsonファイルをアップロードしてください。",type='filepath',file_count="multiple")
-                    srtfile=gr.File(label="srtファイルをアップロードしてください。",type='filepath',file_count="multiple")
-                revj=gr.File(label="修復後のファイルです。",type='filepath',file_count="multiple")
-            with gr.Row():
-                json_execute=gr.Button("ファイルの修復",variant='primary')
-                json_clear=gr.Button("クリア")     
-                   
+
 
         with gr.Tab("Word/Excel↔SRT/VTT/TXT"):
             gr.Markdown("> 日本語のword,Excelファイルをsrt/vtt/txt形式に戻すためのプログラムです。wordファイルは末尾が[_srt.xlsx][_vtt.xlsx][_txtnr.docx],[_txtr.docx]、あるいは[_srt (1).xlsx]のように（1）の付加された日本語ファイルが対象です。複数のファイルを一度に扱えますが、アップロードは1回で行う必要があります。")  
@@ -379,17 +369,5 @@ def gr_components():
             inputs=[],
             outputs=[vtt_input,vtt_translated_content,vtt_translated_file,vtt_output_1,vtt_output_2,dummy_file,t7_dataframe]
         )
-        def fn_j_clear():
-            return [],[],[]
-        
-        json_clear.click(
-            fn=fn_j_clear,
-            inputs=[],
-            outputs=[jsonfile,srtfile,revj]
-        )
-        json_execute.click(
-            fn=rev_j.repair,
-            inputs=[jsonfile,srtfile],
-            outputs=[revj]
-        )        
+    
         return UI
