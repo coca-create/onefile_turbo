@@ -13,8 +13,7 @@ import pandas as pd
 from tqdm import tqdm
 from datetime import datetime
 import traceback
-import shutil
-from huggingface_hub import snapshot_download
+
 
 
 def get_audio_duration(filepath):
@@ -110,10 +109,6 @@ def transcribe(File, Model, Computing, Lang, BeamSize, VadFilter, device, progre
     if not File:
         print("ファイルが提供されていません")
         return"", "", "", [], [], "", "", "", "", "",""
-    
-    save_folder = "/content/drive/My Drive/whisper_uploads"
-
-    File = os.path.join(save_folder, File)
     
     
     
@@ -403,19 +398,7 @@ def transcribe(File, Model, Computing, Lang, BeamSize, VadFilter, device, progre
         srt_dummy_output_path = srt_output_path
 
 
-        destination_folder = '/content/drive/My Drive/whisper_finished'
-        # フォルダが存在しなければ作成
-        os.makedirs(destination_folder, exist_ok=True)
 
-        # 移動させたいファイルのパス（例）
-        file_to_move = File
-        destination_file = os.path.join(destination_folder, os.path.basename(file_to_move))
-        if os.path.exists(destination_file):
-            os.remove(destination_file)
-        # ファイルを移動
-        shutil.move(file_to_move, destination_folder)
-
-        print(f"{file_to_move} を {destination_folder} に移動しました")
         
         return srt_content, txt_nr_content, txt_r_content, main_files, doc_files ,html_srt, html_nr_txt, html_r_txt, filename_copy, srt_dummy_output_path, df_display
     except Exception as e:
