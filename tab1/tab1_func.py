@@ -458,7 +458,7 @@ def transcribe(File, Model, Computing, Lang, BeamSize, VadFilter, device, progre
         filename_copy = input_file_name
         srt_dummy_output_path = srt_output_path
 
-        return "","", "", main_files, doc_files ,html_srt, html_nr_txt, html_r_txt, filename_copy, srt_dummy_output_path, None
+        return srt_content,txt_nr_content, txt_r_content, main_files, doc_files ,html_srt, html_nr_txt, html_r_txt, filename_copy, srt_dummy_output_path, df_display
     except Exception as e:
         print(f"ファイル処理中にエラーが発生しました: {e}")
         traceback.print_exc()
