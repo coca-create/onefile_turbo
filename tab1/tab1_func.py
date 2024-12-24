@@ -490,9 +490,9 @@ def transcribe(queue,File, Model, Computing, Lang, BeamSize, VadFilter, device):
                 match = re.search(r"(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})", segment)
                 if match:
                     start_time = parse_timestamp(match.group(1))
-                    print(start_time)
+                    #print(start_time)
                     end_time = parse_timestamp(match.group(2))
-                    print(end_time)
+                    #print(end_time)
                     # 差が20秒以上ならfuncAを実行
                     if end_time - start_time > 60:
                         message="60秒以上のセグメントが見つかりました。ピリオド付加をご検討下さい"
