@@ -41,6 +41,7 @@ def gr_components():
                         result_json_content = gr.TextArea(label="JSONファイルの内容を表示", autoscroll=False, show_copy_button=True)
                     '''
                 with gr.Column():
+                    reversal_info=gr.Textbox(label="文字起こしコメント",placeholder="whisperファイルの復活の要否に関する情報です。")
                     main_files_path = gr.File(label="SRT,TXT(NR,R)ファイルのダウンロード", file_count="multiple")
                     
 
@@ -97,7 +98,7 @@ def gr_components():
         ##クリアボタン追加分をまとめる。
         def t1_clear():
             empty_html_table = pd.DataFrame({'1': [''], '2': [''], '3': ['']}).to_html(index=False)
-            return None,"","","",[],[],"","","","","",empty_html_table
+            return "",None,"","","",[],[],"","","","","",empty_html_table
         def t2_clear():
             return "","","",[],pd.DataFrame({'1': [''], '2': [''],'3': ['']})
         def t4_clear():
@@ -112,21 +113,21 @@ def gr_components():
             return None,None,None,None,None,None,empty_html_table
 
         def param1_change_clear():
-            return None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None
+            return "",None,None,None,None,None,None,None,None,None,None,None,None,None,None,None,None
 
         ### Tab1 イベントリスナー ###
         param1.change(fn=param1_change_clear,
                       inputs=[],
-                      outputs=[result_srt_content,result_txt_nr_content,result_txt_r_content
+                      outputs=[reversal_info,result_srt_content,result_txt_nr_content,result_txt_r_content
                                ,main_files_path,doc_download_path,html_srt,html_nr_txt,html_r_txt,filename_output,dummy,gr_components_df,
                                translate_srt,translate_nr_txt,translate_r_txt,download_translated_files,button2_df])
         exec_btn.click(
-            fn=t1.transcribe,
+            fn=t1.run_with_progress,
             inputs=[param1, param2, param3, param4, param5, param6,param0],
-            outputs=[result_srt_content,result_txt_nr_content, result_txt_r_content, main_files_path,doc_download_path,html_srt,html_nr_txt,html_r_txt,filename_output,dummy,gr_components_df])
+            outputs=[reversal_info,result_srt_content,result_txt_nr_content, result_txt_r_content, main_files_path,doc_download_path,html_srt,html_nr_txt,html_r_txt,filename_output,dummy,gr_components_df])
         
         t1_clear_Button.click(
-            fn=t1_clear,inputs=[],outputs=[param1,result_srt_content,result_txt_nr_content,result_txt_r_content,main_files_path,doc_download_path,html_srt,html_nr_txt,html_r_txt,filename_output,dummy,gr_components_df]
+            fn=t1_clear,inputs=[],outputs=[reversal_info,param1,result_srt_content,result_txt_nr_content,result_txt_r_content,main_files_path,doc_download_path,html_srt,html_nr_txt,html_r_txt,filename_output,dummy,gr_components_df]
         )
         ### Tab2 イベントリスナー ###
         
