@@ -21,7 +21,7 @@ import ffmpeg
 import math
 from multiprocessing import Process, Queue
 
-def get_audio_duration(filepath, output_dir="temp_wav_files"):
+def get_audio_duration(filepath, output_dir="/content/temp_wav_files"):
     """
     Converts an input audio/video file to WAV format with 16kHz sampling rate and mono channel.
     Returns the duration (in seconds) of the audio and the path to the converted WAV file.
@@ -35,10 +35,9 @@ def get_audio_duration(filepath, output_dir="temp_wav_files"):
     """
     try:
         # Ensure the output directory exists
-        if not filepath.endswith(".wav"):
-            
-   
+        os.makedirs(output_dir, exist_ok=True)
 
+        if not filepath.endswith(".wav"):
             # Generate a temporary output path for the WAV file
             filename = os.path.splitext(os.path.basename(filepath))[0]
             wav_filepath = os.path.join(output_dir, f"{filename}.wav")
@@ -51,7 +50,7 @@ def get_audio_duration(filepath, output_dir="temp_wav_files"):
                 ar="16000",  # 16kHz sampling rate
             ).run(overwrite_output=True)
         else:
-            wav_filepath=filepath
+            wav_filepath = filepath
 
         # Get the duration of the converted file using ffprobe
         probe = ffmpeg.probe(wav_filepath)
@@ -64,9 +63,10 @@ def get_audio_duration(filepath, output_dir="temp_wav_files"):
         return duration, wav_filepath
 
     except Exception as e:
-        print(f"Error in convert_to_wav_and_get_duration: {e}")
-        traceback.print_exc()
+        print(f"Error processing file {filepath}: {e}")
         return None, None
+
+
 
 def format_timestamp(seconds):
     hrs, secs = divmod(seconds, 3600)
